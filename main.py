@@ -1,7 +1,12 @@
-ipv4="10.255.10.254"
-mask="255.255.192.0"
+import json
 
-#Função decimal para binário
+conteudo=open('calculo.json').read()
+dados=json.loads(conteudo)
+
+ipv4=(dados['ipAddr'])
+mask=(dados['netMask'])
+
+#função decimal para binário
 def dec2bin(n):
     b = ''
     while n != 0:
@@ -9,7 +14,7 @@ def dec2bin(n):
         n = int(n / 2)
     return b[::-1]
     
-#função binário para binário    
+#função binário para decimal  
 def bin2dec(a):
     n=0
     for d in a:
@@ -17,21 +22,21 @@ def bin2dec(a):
 
     return n
 
-#Função que realiza a operação AND entre binário
+#função que realiza a operação AND entre binário
 def p_and(a,b):
   aux=[]
   for i in range(32):
     aux.append(int(a[i]) and (int(b[i])))
   return aux
 
-#Função que realiza a operação OR entre binário
+#função que realiza a operação OR entre binário
 def p_or(a,b):
   aux=[]
   for i in range(32):
     aux.append(int(a[i]) or (int(b[i])))
   return aux
   
-#Função que realiza a operação NOT entre binário
+#função que realiza a operação NOT entre binário
 def p_not(a):
   aux=[]
   for i in range(32):
@@ -121,7 +126,7 @@ valorBroad4=str(bin2dec(ipBroadDec4))
 IP=(valorIp1+"."+valorIp2+"."+valorIp3+"."+valorIp4)
 BROADCAST=(valorBroad1+"."+valorBroad2+"."+valorBroad3+"."+valorBroad4)
 
-#ValorIp1 representa o primeiro octeto do Ip de Rede
+#classe do IP
 def classe(valorIp1):
   classe=[]
   valorIp1=int(valorIp1)
@@ -129,8 +134,10 @@ def classe(valorIp1):
     classe="A"
   elif valorIp1 > 127 and valorIp1 < 192:
     classe="B"
+  elif valorIp1 > 192 and valorIp1 <240:
+    classe="D (Multicasting)"
   else:
-    classe="C"
+    classe="E (Uso Futuro)"
   return classe
 
 #verifica se o IP é válido
@@ -166,7 +173,7 @@ def qntBitsHost(maskconc, netmask):
   bitsHost=0
   res=[]
   if((verificaMask(maskconc, netmask))=="inválida"):
-    res="Não é possível determinar a quantidade de bits de Rede"
+    res="A máscara é inválida"
     return res
   else:
     for i in range(32):
@@ -179,7 +186,7 @@ def qntBitsRede(maskconc, netmask):
   bitsRede=32
   res=[]
   if((verificaMask(maskconc, netmask))=="inválida"):
-    res="Não é possível determinar a quantidade de bits de Rede"
+    res="A máscara é inválida"
     return res
   else:
     for i in range(32):
@@ -187,11 +194,128 @@ def qntBitsRede(maskconc, netmask):
         bitsRede=bitsRede-1        
     return bitsRede
 
+#faixa de IP
+def faixa(ipRede, ipBroad):
+  ipFaixaU=[]
+  ipFaixaL=[]
+  faixa=[]
+  for i in range(27,35):
+    ipFaixaU.append(ipBroad[i])
+    ipFaixaL.append(ipRede[i])
+  
+  ipmax=bin2dec(ipFaixaU)
+  ipmin=bin2dec(ipFaixaL)
+  MAXtemp=str(ipmax-1)
+  MINtemp=str(ipmin+1)
+
+  min1=[]
+  max1=[]
+  min2=[]
+  max2=[]
+  min3=[]
+  max3=[]
+
+  for i in range(8):
+    min1.append(ipRede[i])
+    max1.append(ipBroad[i])
+    min2.append(ipRede[i+9])
+    max2.append(ipBroad[i+9])
+    min3.append(ipRede[i+18])
+    max3.append(ipBroad[i+18])
+
+  min1=str(bin2dec(min1))
+  max1=str(bin2dec(max2))
+  min2=str(bin2dec(min2))
+  max2=str(bin2dec(max2))
+  min3=str(bin2dec(min3))
+  max3=str(bin2dec(max3))
+
+  MIN=(min1+"."+min2+"."+min3+"."+MINtemp)
+  MAX=(max1+"."+max2+"."+max3+"."+MAXtemp)
+
+  faixa=(MIN+" / "+MAX)
+  return faixa
+
+#verifica se o IP é reservado
+def ipreservado(ipv4):
+  status=[]
+  if ipv4>="0.0.0.0" and ipv4<="0.255.255.255":
+    status="reservado"
+  elif ipv4>="127.0.0.0" and ipv4<="127.255.255.255":
+    status="reservado"
+  elif ipv4>="10.0.0.0" and ipv4<="10.255.255.255":
+    status="reservado"
+  elif ipv4>="172.16.0.0" and ipv4<="172.31.255.255":
+    status="reservado"
+  elif ipv4>="192.168.0.0" and ipv4<="192.168.255.255":
+    status="reservado"
+  else:
+    status="não reservado"  
+  return status
+
+#retorna a quantidade de hosts possiveis na rede
+def qntHost(bitsHost):
+  qntHost=(2**bitsHost)-2
+  return qntHost
+
 #Valores a serem mostrados
-print("O IP é:",verificaIP(ip))
-print("A Máscara é:",verificaMask(maskconc, netmask))
-print("IP de Rede:",IP)
-print("IP de Broadcast:",BROADCAST)
-print("Classe do IP: ",classe(valorIp1))
-print("Bits de Host da Máscara:",qntBitsHost(maskconc, netmask))
-print("Bits de Rede da Máscara:",qntBitsRede(maskconc, netmask))
+#print("O IP é:",verificaIP(ip))
+validezIP=verificaIP(ip)
+
+#print("A Máscara é:",verificaMask(maskconc, netmask))
+validezMascara=verificaMask(maskconc, netmask)
+
+#mostra os atributos
+def mostraAtributos():
+  print("O IP é:",verificaIP(ip))
+  validezIP=verificaIP(ip)
+  
+  print("A Máscara é:",verificaMask(maskconc, netmask))
+  validezMascara=verificaMask(maskconc, netmask)
+
+  print("O IP é:",ipreservado(ipv4))
+  ipStatus=ipreservado(ipv4)
+
+  print("IP de Rede:",IP)
+  redeIp=IP
+
+  print("IP de Broadcast:",BROADCAST)
+  broadcastIp=BROADCAST
+
+  print("Classe do IP: ",classe(valorIp1))
+  classeIp=classe(valorIp1)
+
+  print("Bits de Rede da Máscara:",qntBitsRede(maskconc, netmask))
+  redebits=qntBitsRede(maskconc, netmask)
+
+  print("Bits de Host da Máscara:",qntBitsHost(maskconc, netmask))
+  hostbits=qntBitsHost(maskconc, netmask)
+
+  bitsHost=qntHost(qntBitsHost(maskconc, netmask))
+  print("Quantidade de hosts na rede:",bitsHost)
+
+  faixavalida=faixa(ipRede,ipBroad)
+  FaixaResposta=("Faixa de máquinas válidas: "+faixavalida)
+  
+  escreverNoArquivo(validezIP,validezMascara,ipStatus,redeIp,broadcastIp,classeIp,redebits,hostbits,bitsHost,faixavalida)
+  return FaixaResposta
+
+def escreverNoArquivo(validezIP,validezMascara,ipStatus,redeIp,broadcastIp,classeIp,redebits,hostbits,bitsHost,faixavalida):
+  
+  with open('saida.json', 'w') as outfile:
+    outfile.write("{\n\tO IP é: "+str(validezIP)+",")
+    outfile.write("\n\tA máscara é: "+str(validezMascara)+",")
+    outfile.write("\n\tO IP é: "+str(ipStatus)+",")
+    outfile.write("\n\tIP da Rede: "+str(redeIp)+",")
+    outfile.write("\n\tIP de Broadcast: "+str(broadcastIp)+",")
+    outfile.write("\n\tClasse do IP: "+str(classeIp)+",")
+    outfile.write("\n\tBits de Rede da Máscara: "+str(redebits)+",")
+    outfile.write("\n\tBits de Host da Máscara: "+str(hostbits)+",")
+    outfile.write("\n\tQuantidade de hosts na rede: "+str(bitsHost)+",")
+    outfile.write("\n\tFaixa de máquinas válidas: "+str(faixavalida+"\n}"))
+
+def main():
+  print(mostraAtributos())  
+
+if __name__ == "__main__":
+  main()
