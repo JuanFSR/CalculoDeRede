@@ -7,7 +7,8 @@ O IP e a Máscara ficam em um Json(calculo.json) e a saída com é colocada em u
 --
 Requisitos
     python3 instalado
-    link para instalação: 'https://python.org.br/instalacao-linux/'
+    link para instalação: https://python.org.br/instalacao-linux/
+    
 --
 Passos para execução
 
